@@ -6,7 +6,8 @@ const {
     signup,
     login,
     sendOTP,
-    changePassword
+    changePassword,
+    socialLogin
 } = require('../controllers/auth');
 
 // Resetpassword controllers
@@ -38,6 +39,9 @@ router.post('/sendotp', sendOTP);
 
 // Route for Changing the password
 router.post('/changepassword', auth, changePassword);
+
+// Route for Social Login (Google/Facebook)
+router.post('/social-login', socialLogin);
 
 
 

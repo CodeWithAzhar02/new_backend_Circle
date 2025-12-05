@@ -329,3 +329,97 @@ exports.changePassword = async (req, res) => {
         })
     }
 }
+
+// ================ SOCIAL LOGIN (Google/Facebook) ================
+exports.socialLogin = async (req, res) => {
+    try {
+        const { email, firstName, lastName, image } = req.body;
+
+        console.log("Social Login Attempt:", email);
+
+        // 1. Check if user already exists
+        let user = await User.findOne({ email }).populate('additionalDetails');
+
+        // 2. If user exists -> Login them
+        if (user) {
+            const payload = {
+                email: user.email,
+                id: user._id,
+                accountType: user.accountType
+            };
+            const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "24h" });
+
+            user = user.toObject();
+            user.token = token;
+            user.password = undefined;
+
+            const cookieOptions = {
+                expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+                httpOnly: true
+            };
+
+            return res.cookie('token', token, cookieOptions).status(200).json({
+                success: true,
+                user,
+                token,
+                message: 'Social Login Successful'
+            });
+        }
+
+        // 3. If user does NOT exist -> Register them
+        console.log("Creating new user for Social Login...");
+
+        // Create dummy profile
+        const profileDetails = await Profile.create({
+            gender: null, dateOfBirth: null, about: null, contactNumber: null
+        });
+
+        // Generate random password
+        const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
+        const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+        // Create user
+        const newUser = await User.create({
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword,
+            accountType: "Student", // Default to Student for social login
+            additionalDetails: profileDetails._id,
+            image: image, // Use Google image
+            approved: true,
+        });
+
+        // Generate token for new user
+        const payload = {
+            email: newUser.email,
+            id: newUser._id,
+            accountType: newUser.accountType
+        };
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "24h" });
+
+        const newUserData = newUser.toObject();
+        newUserData.token = token;
+        newUserData.password = undefined;
+
+        const cookieOptions = {
+            expires: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+            httpOnly: true
+        };
+
+        return res.cookie('token', token, cookieOptions).status(200).json({
+            success: true,
+            user: newUserData,
+            token,
+            message: 'User Registered via Social Login'
+        });
+
+    } catch (error) {
+        console.error("Error in Social Login:", error);
+        return res.status(500).json({
+            success: false,
+            message: "Social Login Failed",
+            error: error.message
+        });
+    }
+}
