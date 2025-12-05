@@ -6,12 +6,17 @@ const mailSender = async (email, title, body) => {
         let transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST,
             port: Number(process.env.SMTP_PORT),
-            secure: Number(process.env.SMTP_PORT) === 465, // True for 465, false for other ports
-            family: 4, // <--- Force IPv4 to prevent Render timeout issues
+            secure: Number(process.env.SMTP_PORT) === 465,
+            family: 4, // Force IPv4
+            connectionTimeout: 10000, // 10 seconds
+            greetingTimeout: 5000,
             auth: {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS
             },
+            tls: {
+                rejectUnauthorized: false // Allow self-signed certs just in case
+            }
         });
 
         // Send mail with proper FROM name
