@@ -1,33 +1,31 @@
 const nodemailer = require("nodemailer");
 
+// Create the transporter ONCE (Singleton pattern)
+const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: Number(process.env.SMTP_PORT) === 465,
+    family: 4, // Force IPv4
+    auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+    },
+    tls: {
+        rejectUnauthorized: false
+    }
+});
+
 const mailSender = async (email, title, body) => {
     try {
-        // Create transporter with proper Gmail settings
-        let transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: Number(process.env.SMTP_PORT),
-            secure: Number(process.env.SMTP_PORT) === 465,
-            family: 4, // Force IPv4
-            connectionTimeout: 10000, // 10 seconds
-            greetingTimeout: 5000,
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS
-            },
-            tls: {
-                rejectUnauthorized: false // Allow self-signed certs just in case
-            }
-        });
-
-        // Send mail with proper FROM name
+        // Send mail using the reusable transporter
         let info = await transporter.sendMail({
-            from: `"Study Circle" <${process.env.SMTP_USER}>`,  // Yeh line important hai
+            from: `"Study Circle" <${process.env.SMTP_USER}>`,
             to: email,
             subject: title,
             html: body,
         });
 
-        console.log("Email sent successfully to:", email);
+        console.log("Email sent successfully to - ", email);
         console.log("Message ID:", info.messageId);
         return info;
 
@@ -35,7 +33,7 @@ const mailSender = async (email, title, body) => {
         console.log("Error while sending mail (mailSender) -", email);
         console.error("Full Error:", error.message);
         if (error.code) console.error("Error Code:", error.code);
-        throw error; // Important — frontend ko pata chale error aaya
+        throw error;
     }
 };
 
