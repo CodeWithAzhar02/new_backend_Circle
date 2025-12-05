@@ -7,6 +7,7 @@ const mailSender = async (email, title, body) => {
             host: process.env.SMTP_HOST,
             port: Number(process.env.SMTP_PORT),
             secure: Number(process.env.SMTP_PORT) === 465, // True for 465, false for other ports
+            family: 4, // <--- Force IPv4 to prevent Render timeout issues
             auth: {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS
