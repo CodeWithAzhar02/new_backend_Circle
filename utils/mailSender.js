@@ -4,16 +4,13 @@ const mailSender = async (email, title, body) => {
     try {
         // Create transporter with proper Gmail settings
         let transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,        // smtp.gmail.com
-            port: Number(process.env.SMTP_PORT), // 587
-            secure: false,                      // false for port 587 (TLS)
+            host: process.env.SMTP_HOST,
+            port: Number(process.env.SMTP_PORT),
+            secure: Number(process.env.SMTP_PORT) === 465, // True for 465, false for other ports
             auth: {
-                user: process.env.SMTP_USER,    // lite29400@gmail.com
-                pass: process.env.SMTP_PASS     // 16-digit App Password (with spaces)
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS
             },
-            tls: {
-                rejectUnauthorized: false
-            }
         });
 
         // Send mail with proper FROM name
