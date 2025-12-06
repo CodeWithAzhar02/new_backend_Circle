@@ -333,9 +333,9 @@ exports.changePassword = async (req, res) => {
 // ================ SOCIAL LOGIN (Google/Facebook) ================
 exports.socialLogin = async (req, res) => {
     try {
-        const { email, firstName, lastName, image } = req.body;
+        const { email, firstName, lastName, image, accountType } = req.body;
 
-        console.log("Social Login Attempt:", email);
+        console.log("Social Login Attempt:", email, "Role:", accountType);
 
         // 1. Check if user already exists
         let user = await User.findOne({ email }).populate('additionalDetails');
@@ -378,16 +378,20 @@ exports.socialLogin = async (req, res) => {
         const randomPassword = Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8);
         const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
+        // Determine Role and Approval status
+        const role = accountType || "Student";
+        const approved = role === "Instructor" ? false : true;
+
         // Create user
         const newUser = await User.create({
             firstName,
             lastName,
             email,
             password: hashedPassword,
-            accountType: "Student", // Default to Student for social login
+            accountType: role,
             additionalDetails: profileDetails._id,
             image: image, // Use Google image
-            approved: true,
+            approved: approved,
         });
 
         // Generate token for new user
