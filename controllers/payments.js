@@ -256,4 +256,35 @@ exports.sendPaymentSuccessEmail = async (req, res) => {
 //             message: 'Invalid signature'
 //         });
 //     }
-// }
+// ================ Enroll Free Course ================
+exports.enrollFreeCourse = async (req, res) => {
+    try {
+        const { courseId } = req.body;
+        const userId = req.user.id;
+
+        if (!courseId) {
+            return res.status(400).json({ success: false, message: "Please provide Course Id" });
+        }
+
+        const course = await Course.findById(courseId);
+        if (!course) {
+            return res.status(404).json({ success: false, message: "Course not found" });
+        }
+
+        if (course.price > 0) {
+            return res.status(400).json({ success: false, message: "This course is not free" });
+        }
+
+        const uid = new mongoose.Types.ObjectId(userId);
+        if (course.studentsEnrolled.includes(uid)) {
+            return res.status(400).json({ success: false, message: "Student is already Enrolled" });
+        }
+
+        await enrollStudents([courseId], userId, res);
+        return res.status(200).json({ success: true, message: "Successfully Enrolled" });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({ success: false, message: error.message });
+    }
+}
