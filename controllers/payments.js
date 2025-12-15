@@ -152,12 +152,16 @@ const enrollStudents = async (courses, userId, res) => {
             // console.log("Enrolled student: ", enrolledStudent)
 
             // Send an email notification to the enrolled student
-            const emailResponse = await mailSender(
-                enrolledStudent.email,
-                `Successfully Enrolled into ${enrolledCourse.courseName}`,
-                courseEnrollmentEmail(enrolledCourse.courseName, `${enrolledStudent.firstName}`)
-            )
-            // console.log("Email Sent Successfully", emailResponse);
+            try {
+                const emailResponse = await mailSender(
+                    enrolledStudent.email,
+                    `Successfully Enrolled into ${enrolledCourse.courseName}`,
+                    courseEnrollmentEmail(enrolledCourse.courseName, `${enrolledStudent.firstName}`)
+                )
+                // console.log("Email Sent Successfully", emailResponse);
+            } catch (emailError) {
+                console.log("Error sending enrollment email:", emailError);
+            }
         }
         catch (error) {
             console.log(error);
